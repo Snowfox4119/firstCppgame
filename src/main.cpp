@@ -1,6 +1,8 @@
 #include <iostream>
 #include <raylib.h>
 
+#include <imgui.h>
+#include <rlImGui.h>
 int main()
 {
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
