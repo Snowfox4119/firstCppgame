@@ -4,6 +4,8 @@
 #include <imgui.h>
 #include <rlImGui.h>
 
+#include <gameMain.h>
+
 void ApplySakuraTheme() {
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
@@ -22,7 +24,7 @@ void ApplySakuraTheme() {
     colors[ImGuiCol_HeaderHovered]    = ImVec4(0.88f, 0.56f, 0.73f, 0.80f);
     colors[ImGuiCol_HeaderActive]     = ImVec4(0.92f, 0.45f, 0.68f, 1.00f);
 
-    // Buttons (Blossom Rose to Deep Pink)
+    // Buttons (Blossom Rose to De#include <iostream>ep Pink)
     colors[ImGuiCol_Button]           = ImVec4(0.76f, 0.42f, 0.60f, 0.60f);
     colors[ImGuiCol_ButtonHovered]    = ImVec4(0.87f, 0.51f, 0.70f, 1.00f);
     colors[ImGuiCol_ButtonActive]     = ImVec4(0.92f, 0.38f, 0.65f, 1.00f);
@@ -67,6 +69,11 @@ int main()
 
 #pragma endregion
 
+    if (!initGame())
+    {
+        return 0;
+    }
+
 	while(!WindowShouldClose())
 	{
 		BeginDrawing();
@@ -82,26 +89,22 @@ int main()
 
 	#pragma endregion
 
-	#pragma region imgui windows
-		ImGui::Begin("test");
-
-		ImGui::Text("hello");
-		ImGui::Button("button");
-
-		ImGui::End();
-
-		//ImGui::ShowDemoWindow();
-
-	#pragma endregion
+        if(!updateGame()){
+            CloseWindow();
+        }
 
 		rlImGuiEnd();
 
 		EndDrawing();
 	}
-
+#pragma region imgui
 	rlImGuiShutdown();
 
+#pragma endregion
+
 	CloseWindow();
+    closeGame();
+    rlImGuiShutdown();
 
 	return 0;
 }
