@@ -53,9 +53,15 @@ void ApplySakuraTheme() {
 }
 
 int main()
-{
+{   
+#if PRODUCTION_BUILD == 1
+    SetTraceLogLevel(LOG_NONE); // No log output to the console by raylib.
+#endif
+
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(800,450, "window name");
+    SetExitKey(KEY_NULL); // Diable Esc from closing the window.
+    SetTargetFPS(240);
 
 #pragma region imgui
 	rlImGuiSetup(true);
@@ -69,15 +75,14 @@ int main()
 
 #pragma endregion
 
-    if (!initGame())
-    {
-        return 0;
-    }
+    if(!initGame())
+    { return 0; }
 
 	while(!WindowShouldClose())
 	{
 		BeginDrawing();
-		ClearBackground(RAYWHITE);
+		ClearBackground(BLACK);
+
 	#pragma region imgui
 		rlImGuiBegin();
 		
