@@ -1,5 +1,7 @@
+#include <iostream>
 #include <raylib.h>
 #include "gameMain.h"
+#include <asserts.h>
 
 struct GameData
 {
@@ -17,7 +19,6 @@ bool updateGame()
     Color c;
     c.r = 255;
     c.g = 0;
-    if (IsKeyDown(KEY_A)) { gameData.positionX -= 1 * deltaTime; }
     c.b = 200;
     c.a = 255;
 
@@ -30,6 +31,8 @@ bool updateGame()
     if (IsKeyDown(KEY_S)) { gameData.positionY += 200 * deltaTime; }
 
     DrawRectangle(gameData.positionX, gameData.positionY, 50, 50, c);
+
+    //permaAssertComment(gameData.positionX == 100, "It's not 100!");
 
     return true;
 }
