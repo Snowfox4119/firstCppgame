@@ -1,38 +1,29 @@
 #include <iostream>
 #include <raylib.h>
 #include "gameMain.h"
+#include "assetManager.h"
 #include <asserts.h>
 
 struct GameData
 {
-    float positionX = 100;
-    float positionY = 100;
 }gameData;
+
+AssetManager assetManager;
 
 bool initGame()
 {
+    assetManager.loadAll();
+
     return true;
 }
 
 bool updateGame()
 {
-    Color c;
-    c.r = 255;
-    c.g = 0;
-    c.b = 200;
-    c.a = 255;
-
     float deltaTime = GetFrameTime();
     if (deltaTime > 1.f / 5) { deltaTime = 1 / 5.f; }
 
-    if (IsKeyDown(KEY_A)) { gameData.positionX -= 200 * deltaTime; }
-    if (IsKeyDown(KEY_D)) { gameData.positionX += 200 * deltaTime; }
-    if (IsKeyDown(KEY_W)) { gameData.positionY -= 200 * deltaTime; }
-    if (IsKeyDown(KEY_S)) { gameData.positionY += 200 * deltaTime; }
-
-    DrawRectangle(gameData.positionX, gameData.positionY, 50, 50, c);
-
-    //permaAssertComment(gameData.positionX == 100, "It's not 100!");
+    DrawTexturePro(assetManager.dirt, {0,0,(float)assetManager.dirt.width, (float)assetManager.dirt.height}, 
+    {50, 50, 100, 100}, {}, 0, WHITE);
 
     return true;
 }
