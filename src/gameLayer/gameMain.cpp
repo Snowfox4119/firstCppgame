@@ -2,11 +2,15 @@
 #include "gameMain.h"
 #include <asserts.h>
 #include "assetManager.h"
+#include "helpers.h"
+#include "raylib.h"
 #include <gameMap.h>
+#include <raymath.h>
 
 struct GameData
 {
     GameMap gameMap;
+    Camera2D camera;
 }gameData;
 
 AssetManager assetManager;
@@ -18,10 +22,14 @@ bool initGame()
     gameData.gameMap.create(30, 10);
 
     gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(1, 1).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(2, 2).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(3, 3).type = Block::dirt;
-    gameData.gameMap.getBlockUnsafe(4, 4).type = Block::dirt;
+    gameData.gameMap.getBlockUnsafe(1, 1).type = Block::grass;
+    gameData.gameMap.getBlockUnsafe(2, 2).type = Block::goldBlock;
+    gameData.gameMap.getBlockUnsafe(3, 3).type = Block::glass;
+    gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
+
+    gameData.camera.target = {0,0}; //World-space center of view
+    gameData.camera.rotation = 0.0f;
+    gameData.camera.zoom = 100.0f;
     
     return true;
 }
@@ -31,30 +39,96 @@ bool updateGame()
     float deltaTime = GetFrameTime();
     if (deltaTime > 1.f / 5) { deltaTime = 1 / 5.f; }
 
+    gameData.camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+
     ClearBackground({75, 75, 150, 255});
 
-    for (int y = 0; y < gameData.gameMap.h; y++)
-        for (int x = 0; x < gameData.gameMap.w; x++)
+    #pragma region camera movement
+
+        if (IsKeyDown(KEY_LEFT)) gameData.camera.target.x -= 7.f * deltaTime;
+        if (IsKeyDown(KEY_RIGHT)) gameData.camera.target.x += 7.f * deltaTime;
+        if (IsKeyDown(KEY_UP)) gameData.camera.target.y -= 7.f * deltaTime;
+        if (IsKeyDown(KEY_DOWN)) gameData.camera.target.y += 7.f * deltaTime;
+
+    #pragma endregion
+
+    Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
+    int blockX = (int)floor(worldPos.x);
+    int blockY = (int)floor(worldPos.y);
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+    {
+        auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+        if (b)
+        {
+            *b = {};
+        }
+    }
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+    {
+        auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+        if (b)
+        {
+            b->type = Block::gold;
+        }
+    }
+
+#pragma region draw world
+
+    BeginMode2D(gameData.camera);
+
+    Vector2 topLeftView = GetScreenToWorld2D({0, 0}, gameData.camera);
+    Vector2 bottomRightView = GetScreenToWorld2D({(float)GetScreenWidth(), (float)GetScreenHeight()}, gameData.camera);
+
+    int StartXView = (int)floorf(topLeftView.x - 1);
+    int endXView = (int)ceilf(bottomRightView.x + 1);
+    int startYView = (int)floorf(topLeftView.y - 1);
+    int endYView = (int)ceilf(bottomRightView.y + 1);
+
+    StartXView = Clamp(StartXView, 0, gameData.gameMap.w - 1);
+    endXView = Clamp(endXView, 0, gameData.gameMap.w - 1);
+
+    startYView = Clamp(startYView, 0, gameData.gameMap.h - 1);
+    endYView = Clamp(endYView, 0, gameData.gameMap.h - 1);
+
+    for (int y = startYView; y < endYView; y++)
+        for (int x = StartXView; x < endXView; x++)
         {
             auto &b = gameData.gameMap.getBlockUnsafe(x, y);
 
             if (b.type != Block::air)
             {
-                float size = 32;
-                float posX = x * size; 
-                float posY = y * size;
 
-                DrawTexturePro(assetManager.dirt, 
-                    Rectangle{0.f,0.f, (float)assetManager.dirt.width, (float)assetManager.dirt.height}, //Source
-                    {50, 50, 100, 100}, //Destination
-                    {}, //Origin
+                DrawTexturePro(
+                    assetManager.textures, 
+                    getTextureAtlas(b.type, 0, 32, 32), //Source
+                    {(float)x, (float)y, 1, 1}, //Destination
+                    {}, //Originy
                     0, //Rotation
                     WHITE //Tint
                 );
             }
         }    
+
+    //Draw selected block
+    DrawTexturePro(
+        assetManager.frame,
+        {0, 0, (float)assetManager.frame.width, (float)assetManager.frame.height}, //Source
+        {(float)blockX, (float)blockY, 1, 1}, //Destination
+        {0, 0}, //Origin
+        0.0f, //Rotation
+        WHITE //Tint
+    );
+    
+    EndMode2D();
+
+#pragma endregion
+
+    DrawFPS(10, 10);
+
     return true;
-}
+    }
 
 void closeGame()
 {
